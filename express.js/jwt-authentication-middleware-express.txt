@@ -1,0 +1,20 @@
+// Title: JWT Authentication Middleware (Express)
+// Language: express.js
+// Tags: express, express.js, javascript, authntication
+// Created: 9/30/2025
+// Snippet ID: b3845485-cbea-46c9-a7bf-22a597a35970
+
+// auth.js — JWT Middleware
+import jwt from "jsonwebtoken";
+
+export function auth(req, res, next) {
+  const token = req.headers["authorization"]?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Access denied" });
+
+  try {
+    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    next();
+  } catch {
+    res.status(403).json({ error: "Invalid token" });
+  }
+}
