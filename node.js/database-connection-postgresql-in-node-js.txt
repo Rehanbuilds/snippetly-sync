@@ -1,0 +1,19 @@
+// Title: Database Connection (PostgreSQL in Node.js)
+// Language: node.js
+// Tags: node.js, java, postgres
+// Created: 9/27/2025
+// Snippet ID: 80e30e2b-f02b-4abb-a0d4-6531b41fd761
+
+// db.js — PostgreSQL connection (Node.js)
+import { Pool } from "pg";
+
+const pool = new Pool({
+  user: process.env.DB_USER,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
+  password: process.env.DB_PASS,
+  port: 5432,
+  ssl: { rejectUnauthorized: false } // fix common SSL error
+});
+
+export const query = (text, params) => pool.query(text, params);
