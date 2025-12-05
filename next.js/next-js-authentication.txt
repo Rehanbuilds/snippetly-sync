@@ -1,0 +1,15 @@
+// Title: next js authentication
+// Language: next.js
+// Tags: next js, java, authtication
+// Created: 10/25/2025
+// Snippet ID: 107a6eee-1d97-4ad9-ba00-364197245328
+
+// app/about/page.js (About Page)
+export default function AboutPage() {
+  return (
+    <div>
+      <h1>About Us</h1>
+      <p>Learn more about our company.</p>
+    </div>
+  );
+}
