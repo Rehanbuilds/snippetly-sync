@@ -1,37 +1,27 @@
 // Title: Imported Snippet
 // Language: javascript
 // Tags: none
-// Created: 12/5/2025
-// Snippet ID: f62832c6-f352-41f5-9ec8-d7ffedc660a3
+// Created: 12/19/2025
+// Snippet ID: 43004d5d-3f4c-4866-8667-ba8fd4b72189
 
-import type { Metadata } from 'next'
-import { GeistSans } from 'geist/font/sans'
-import { GeistMono } from 'geist/font/mono'
-import './globals.css'
+# 🌐 Hosting & Deployment Tools
 
-export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
-}
+ [Vercel](https://vercel.com/)
+- Best for Next.js apps
+- Free tier available
+- Built-in CI/CD & analytics
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
-  return (
-    <html lang="en">
-      <head>
-        <style>{`
-html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
-  --font-mono: ${GeistMono.variable};
-}
-        `}</style>
-      </head>
-      <body>{children}</body>
-    </html>
-  )
-}
+ [Railway](https://railway.app/)
+- Deploy apps & databases easily
+- Free credits every month
+- Great for small SaaS MVPs
+
+[Render](https://render.com/)
+- Simple hosting for web services
+- Supports Node, Python, Go, Ruby
+- Auto deploy from GitHub
+
+[Netlify](https://netlify.com/)
+- Fast JAMstack hosting
+- Edge functions
+- Great for static + serverless apps
