@@ -2,156 +2,228 @@
 // Language: javascript
 // Tags: none
 // Created: 12/5/2025
-// Snippet ID: 344be25c-1d98-4b8c-a249-a3902a8965ed
+// Snippet ID: 33cad3eb-fecb-4bb8-a12c-7a95c03c5115
 
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
-import { CheckCircle, Users, Shield, Zap, Cloud, Globe } from "lucide-react"
-import Link from "next/link"
+"use client"
+
+import type React from "react"
+
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Plus } from "lucide-react"
+import { addTask, type Folder } from "@/lib/storage"
 
-export default function AboutPage() {
+interface AddTaskDialogProps {
+  folders: Folder[]
+  onTaskAdded: () => void
+  children?: React.ReactNode
+}
+
+export function AddTaskDialog({ folders, onTaskAdded, children }: AddTaskDialogProps) {
+  const [open, setOpen] = useState(false)
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [day, setDay] = useState("")
+  const [month, setMonth] = useState("")
+  const [year, setYear] = useState("")
+  const [reminderTime, setReminderTime] = useState<Date>()
+  const [folderId, setFolderId] = useState<string | null>(null)
+  const [priority, setPriority] = useState<"Low" | "Medium" | "High">("Medium")
+
+  const createDateFromInputs = (): Date | null => {
+    if (!day || !month || !year) return null
+    const dayNum = Number.parseInt(day)
+    const monthNum = Number.parseInt(month)
+    const yearNum = Number.parseInt(year)
+
+    if (dayNum < 1 || dayNum > 31 || monthNum < 1 || monthNum > 12 || yearNum < new Date().getFullYear()) {
+      return null
+    }
+
+    return new Date(yearNum, monthNum - 1, dayNum)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    const dueDate = createDateFromInputs()
+    if (!title.trim() || !dueDate) return
+
+    addTask({
+      title: title.trim(),
+      description: description.trim(),
+      dueDate,
+      reminderTime,
+      folderId,
+      priority,
+      status: "Pending",
+    })
+
+    // Reset form
+    setTitle("")
+    setDescription("")
+    setDay("")
+    setMonth("")
+    setYear("")
+    setReminderTime(undefined)
+    setFolderId(null)
+    setPriority("Medium")
+    setOpen(false)
+    onTaskAdded()
+  }
+
+  const currentYear = new Date().getFullYear()
+  const years = Array.from({ length: 11 }, (_, i) => currentYear + i)
+
+  const isDateValid = createDateFromInputs() !== null
+
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-
-      <main className="py-16 lg:py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Hero Section for About Page */}
-          <div className="text-center mb-16">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-black mb-6">
-              About <span className="text-gray-700">PDF Pilot</span>
-            </h1>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Your trusted partner for all PDF solutions. We are committed to providing fast, secure, and reliable tools
-              for everyone.
-            </p>
-            <Link href="/tools">
-              <Button size="lg" className="bg-black text-white hover:bg-gray-800 px-8 py-3">
-                Start Converting Today
-              </Button>
-            </Link>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children || (
+          <Button size="sm" className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Task
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="w-[95vw] max-w-[425px] max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Add New Task</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="title">Title *</Label>
+            <Input
+              id="title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter task title"
+              required
+            />
           </div>
 
-          {/* Our Mission Section */}
-          <section className="mb-16">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-black mb-6">Our Mission</h2>
-                <p className="text-lg text-gray-700 mb-4">
-                  At PDF Pilot, our mission is to simplify document management for individuals and businesses worldwide.
-                  We believe that working with PDF files should be effortless, secure, and accessible to everyone,
-                  regardless of their technical expertise.
-                </p>
-                <p className="text-lg text-gray-700">
-                  We strive to build intuitive, high-performance tools that empower you to convert, edit, and manage
-                  your PDFs with confidence and ease.
-                </p>
-              </div>
-              <div className="relative h-64 md:h-96 rounded-xl overflow-hidden shadow-lg">
-                <img
-                  src="/placeholder.svg?height=400&width=600"
-                  alt="Our Mission"
-                  className="absolute inset-0 w-full h-full object-cover"
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter task description (optional)"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Due Date *</Label>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="day" className="text-xs text-muted-foreground">
+                  Day
+                </Label>
+                <Input
+                  id="day"
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={day}
+                  onChange={(e) => setDay(e.target.value)}
+                  placeholder="DD"
+                  className="text-center"
                 />
               </div>
-            </div>
-          </section>
-
-          {/* Why Choose Us - Expanded */}
-          <section className="mb-16 bg-gray-50 p-8 rounded-xl">
-            <h2 className="text-3xl sm:text-4xl font-bold text-black text-center mb-12">Why Trust PDF Pilot?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <Shield className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">Uncompromised Security</h3>
-                  <p className="text-gray-600">
-                    Your privacy is our top priority. All files are processed using advanced encryption and are
-                    automatically deleted from our servers after conversion.
-                  </p>
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="month" className="text-xs text-muted-foreground">
+                  Month
+                </Label>
+                <Select value={month} onValueChange={setMonth}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="MM" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Jan</SelectItem>
+                    <SelectItem value="2">Feb</SelectItem>
+                    <SelectItem value="3">Mar</SelectItem>
+                    <SelectItem value="4">Apr</SelectItem>
+                    <SelectItem value="5">May</SelectItem>
+                    <SelectItem value="6">Jun</SelectItem>
+                    <SelectItem value="7">Jul</SelectItem>
+                    <SelectItem value="8">Aug</SelectItem>
+                    <SelectItem value="9">Sep</SelectItem>
+                    <SelectItem value="10">Oct</SelectItem>
+                    <SelectItem value="11">Nov</SelectItem>
+                    <SelectItem value="12">Dec</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <Zap className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">Blazing Fast Conversions</h3>
-                  <p className="text-gray-600">
-                    Leveraging cutting-edge technology, we ensure your documents are converted in mere seconds, saving
-                    you valuable time.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <Cloud className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">Cloud-Powered Accessibility</h3>
-                  <p className="text-gray-600">
-                    Access our tools from any device, anywhere in the world. No software downloads or installations
-                    needed.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <Users className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">User-Centric Design</h3>
-                  <p className="text-gray-600">
-                    Our interface is designed to be intuitive and easy to use, ensuring a smooth experience for
-                    everyone.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <CheckCircle className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">High Quality Results</h3>
-                  <p className="text-gray-600">
-                    We prioritize the integrity of your documents, ensuring that converted files maintain their original
-                    formatting and quality.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0 inline-flex items-center justify-center w-12 h-12 bg-black text-white rounded-full">
-                  <Globe className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-black mb-2">Global Reach</h3>
-                  <p className="text-gray-600">
-                    PDF Pilot is available worldwide, supporting a diverse range of users and their document needs.
-                  </p>
-                </div>
+              <div className="space-y-1">
+                <Label htmlFor="year" className="text-xs text-muted-foreground">
+                  Year
+                </Label>
+                <Select value={year} onValueChange={setYear}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="YYYY" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((y) => (
+                      <SelectItem key={y} value={y.toString()}>
+                        {y}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* Call to Action */}
-          <section className="text-center bg-black text-white p-12 rounded-xl">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Experience Effortless PDF Management?</h2>
-            <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-              Join our growing community of satisfied users and simplify your document workflow today.
-            </p>
-            <Link href="/tools">
-              <Button size="lg" variant="secondary" className="px-8 py-3">
-                Get Started Now
-              </Button>
-            </Link>
-          </section>
-        </div>
-      </main>
+          <div className="space-y-2">
+            <Label htmlFor="priority">Priority</Label>
+            <Select value={priority} onValueChange={(value: "Low" | "Medium" | "High") => setPriority(value)}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Low">Low</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="High">High</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-      <Footer />
-    </div>
+          {folders.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="folder">Folder</Label>
+              <Select value={folderId || "none"} onValueChange={setFolderId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a folder (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No folder</SelectItem>
+                  {folders.map((folder) => (
+                    <SelectItem key={folder.id} value={folder.id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+            <Button type="submit" disabled={!title.trim() || !isDateValid} className="w-full sm:w-auto">
+              Add Task
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   )
 }
